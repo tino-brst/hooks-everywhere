@@ -1,31 +1,34 @@
 import React from 'react'
-import { sleep } from '../utils'
+import { fetch } from '../utils'
+
+interface FetchOptions extends RequestInit {
+  body?: any
+}
 
 export type useFetchOptions = {
-  options?: RequestInit
+  options?: FetchOptions
   autorun?: boolean
 }
 
 export function useFetch<T = any>(url: string, { options = {}, autorun = true }: useFetchOptions = {}) {
   const [data, setData] = React.useState<T | undefined>(undefined)
   const [isLoading, setIsLoading] = React.useState(false)
+  const optionsRef = React.useRef(options)
 
-  const makeRequest = React.useCallback(
-    async (body?: any) => {
-      try {
-        setIsLoading(true)
-        const requestBody = body !== undefined ? JSON.stringify(body) : undefined
-        const response = await fetch(url, { ...options, body: requestBody })
-        const responseBody: T = await response.json()
-        await sleep(500)
-        setData(responseBody)
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [url],
-  )
+  optionsRef.current = options
+
+  const makeRequest = React.useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const options = optionsRef.current
+      const requestBody = options.body !== undefined ? JSON.stringify(options.body) : undefined
+      const response = await fetch(url, { ...options, body: requestBody })
+      const responseBody: T = await response.json()
+      setData(responseBody)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [url])
 
   React.useEffect(() => {
     if (autorun) {
@@ -38,5 +41,4 @@ export function useFetch<T = any>(url: string, { options = {}, autorun = true }:
 
 // TODO handle race conditions (didCancel)
 // TODO handle errors and error states
-// TODO type makeRequest params
 // TODO T extends objects

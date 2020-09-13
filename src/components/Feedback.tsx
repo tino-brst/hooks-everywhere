@@ -5,7 +5,7 @@ export function Feedback() {
   const [inputValue, setInputValue] = React.useState('')
 
   const { makeRequest, isLoading } = useFetch(`https://jsonplaceholder.typicode.com/feedback`, {
-    options: { method: 'POST' },
+    options: { method: 'POST', body: { inputValue } },
     autorun: false,
   })
 
@@ -15,7 +15,7 @@ export function Feedback() {
       <form
         onSubmit={(event) => {
           event.preventDefault()
-          makeRequest({ feedback: inputValue })
+          makeRequest()
         }}
       >
         <input type="text" value={inputValue} onChange={(event) => setInputValue(event.target.value)} />
